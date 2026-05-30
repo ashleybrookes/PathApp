@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option csharp_namespace = "PathDrift.Shared.Protos";
+
+package pathdrift;
+
+// Service for streaming coordinate data from the primary service to the secondary service.
+service CoordinateService {
+  // Client-streaming RPC: the primary service streams all coordinates, then receives a summary result.
+  rpc StreamCoordinates (stream CoordinateMessage) returns (StreamResult);
+}
+
+// Represents a single coordinate point from the path drift file.
+//TODO: this needs to work with all the columns - ID	Index	X	Y	Z	Rx	Ry	Rz	Ux	Uy	Uz	UTranslation	URx	URy	URz
+message CoordinateMessage {
+  string path_id = 1;
+  int32 index = 2;
+  double x = 3;
+  double y = 4;
+  double z = 5;
+}
+
+// Result returned after all coordinates have been received.
+message StreamResult {
+  bool success = 1;
+  int32 points_received = 2;
+  string message = 3;
+}
+
