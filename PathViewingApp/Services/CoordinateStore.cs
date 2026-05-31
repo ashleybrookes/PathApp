@@ -7,6 +7,7 @@ namespace PathViewingApp.Services;
 /// <summary>
 /// Thread-safe in-memory store for received coordinates.
 /// Notifies subscribers when new data is added.
+/// Coordinates are stored in a queue with a maximum capacity (10,000) to prevent unbounded memory growth. When the capacity is exceeded, the oldest coordinate is removed.
 /// </summary>
 public sealed class CoordinateStore(ILogger<CoordinateStore> logger) : ICoordinateStore
 {

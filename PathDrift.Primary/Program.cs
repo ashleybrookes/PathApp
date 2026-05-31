@@ -13,6 +13,7 @@ builder.Services.AddSingleton<ICoordinateParser, CoordinateParserService>();
 
 using var host = builder.Build();
 
+// Read configuration
 var config = host.Services.GetRequiredService<IConfiguration>();
 var filePathConfig = config["PathDrift:FilePath"]
     ?? throw new InvalidOperationException("PathDrift:FilePath is not configured.");
@@ -22,19 +23,23 @@ var filePath = Path.IsPathRooted(filePathConfig)
 var serverAddress = config["PathDrift:ServerAddress"]
     ?? throw new InvalidOperationException("PathDrift:ServerAddress is not configured.");
 
+// Get services
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 var fileReader = host.Services.GetRequiredService<IFileReader>();
 var parser = host.Services.GetRequiredService<ICoordinateParser>();
 
+// Log startup information
 logger.LogInformation("Path Drift Primary Service starting");
 logger.LogInformation("File: {FilePath}", filePath);
 logger.LogInformation("Server: {ServerAddress}", serverAddress);
 
+// Main execution
 try
 {
+    // The sender will handle the entire lifecycle of the gRPC connection and file processing
     await using var sender = new GrpcCoordinateSender(fileReader, parser,
         host.Services.GetRequiredService<ILogger<GrpcCoordinateSender>>(), serverAddress);
-
+    // This will read the file, parse it, and stream the coordinates to the server
     var result = await sender.SendFileAsync(filePath);
 
     logger.LogInformation("Result — Success: {Success}, Points received: {Count}, Message: {Msg}",

@@ -26,6 +26,7 @@ builder.Services.AddServerSideBlazor().AddCircuitOptions(o => o.DetailedErrors =
 builder.Services.AddSingleton<ICoordinateStore, CoordinateStore>();
 builder.Services.AddSingleton<PathViewerLogic>();
 
+// build and run application
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

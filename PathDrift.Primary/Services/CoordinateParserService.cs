@@ -6,7 +6,8 @@ namespace PathDrift.Primary.Services;
 
 /// <summary>
 /// Parses comma-separated path drift lines into Coordinate objects.
-/// Expected format: ID,Index,X,Y,Z,Rx,Ry,Rz
+/// Expected format: Path_ID,Index,X,Y,Z,Rx,Ry,Rz - this is the only format currently supported, and lines that have less than 8 fields will be ignored. 
+/// The first line is expected to be a header and will be skipped. All numeric fields are parsed using invariant culture to ensure consistent decimal handling regardless of locale.
 /// </summary>
 public sealed class CoordinateParserService : ICoordinateParser
 {
