@@ -23,6 +23,17 @@ CSV File → PathDrift.Primary → (gRPC stream) → PathViewingApp → Browser 
 ### Prerequisites
 
 - .NET 10 SDK
+- Trusted .NET development certificate (for HTTPS/gRPC):
+  ```bash
+  dotnet dev-certs https --trust
+  ```
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/ashleybrookes/PathApp.git
+cd PathApp
+```
 
 ### Running from Visual Studio
 
@@ -51,6 +62,63 @@ CSV File → PathDrift.Primary → (gRPC stream) → PathViewingApp → Browser 
    The page shows:
    - An **SVG chart** of the path, switchable between X-Y, X-Z, and Y-Z planes
    - A **coordinate data table** below the chart listing every received point with all columns in real-time
+
+## Configuration
+
+Each project has its own `appsettings.json` file for configuration.
+
+### PathDrift.Primary (`PathDrift.Primary/appsettings.json`)
+
+Controls which data file to stream and where to send it:
+
+```json
+{
+  "PathDrift": {
+	"FilePath": "data/run1.csv",
+	"ServerAddress": "https://localhost:7255"
+  }
+}
+```
+
+| Setting | Description |
+|---------|-------------|
+| `FilePath` | Path to the CSV data file (relative to the build output directory) |
+| `ServerAddress` | URL of the PathViewingApp gRPC server |
+
+### PathViewingApp (`PathViewingApp/appsettings.json`)
+
+Controls server endpoints, protocols, and logging:
+
+```json
+{
+  "Kestrel": {
+	"Endpoints": {
+	  "Http": {
+		"Url": "http://localhost:5036",
+		"Protocols": "Http1"
+	  },
+	  "Https": {
+		"Url": "https://localhost:7255",
+		"Protocols": "Http1AndHttp2"
+	  }
+	}
+  }
+}
+```
+
+| Setting | Description |
+|---------|-------------|
+| `Endpoints:Http` | HTTP-only endpoint for the Blazor UI (HTTP/1.1) |
+| `Endpoints:Https` | HTTPS endpoint serving both the Blazor UI and gRPC server (HTTP/1.1 + HTTP/2) |
+
+> **Note:** gRPC requires HTTP/2 over TLS, which is why the HTTPS endpoint uses `Http1AndHttp2`.
+
+### Ports
+
+| Port | Protocol | Purpose |
+|------|----------|---------|
+| 5036 | HTTP | Blazor app (HTTP/1.1 only) |
+| 7255 | HTTPS | Blazor app + gRPC server (HTTP/1.1 and HTTP/2) |
 
 ## Features
 
@@ -150,4 +218,8 @@ Future improvements that would enhance the application:
 - **Increase unit test coverage** — add more unit tests to bring coverage from 66% up to 100%
 - **Use .NET TPL for parallel processing** — leverage the Task Parallel Library to utilise more available CPU when handling large datasets and supporting real-time 2D/3D drawing
 - **Extend PathDrift.Primary into an ASP.NET Core app** — replace the console app with a web application that allows users to upload CSV files via a browser, rather than reading from a pre-configured file path
+- **Configurable SVG dimensions** — allow users to adjust chart size and padding from the UI
 
+## License
+
+This project is licensed under the [MIT License](LICENSE).

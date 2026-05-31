@@ -1,20 +1,8 @@
 using PathViewingApp.Components;
 using PathViewingApp.Services;
 using PathDrift.Shared.Interfaces;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Configure Kestrel with HTTPS (HTTP/2 works natively with TLS)
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ListenLocalhost(5036, o => o.Protocols = HttpProtocols.Http1);
-    options.ListenLocalhost(7255, o =>
-    {
-        o.Protocols = HttpProtocols.Http1AndHttp2;
-        o.UseHttps();
-    });
-});
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
