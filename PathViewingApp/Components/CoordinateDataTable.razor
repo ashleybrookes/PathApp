@@ -1,0 +1,71 @@
+@using PathDrift.Shared.Interfaces
+@using PathDrift.Shared.Models
+@implements IDisposable
+@inject ICoordinateStore Store
+
+<div class="mt-4">
+    <h5>Stream Data <span class="badge bg-secondary ms-2">@_coordinates.Count points</span></h5>
+
+    @if (_coordinates.Count == 0)
+    {
+        <div class="alert alert-info">No stream data received yet.</div>
+    }
+    else
+    {
+        <div style="max-height: 400px; overflow-y: auto;">
+            <table class="table table-sm table-striped table-bordered table-hover">
+                <thead class="table-dark sticky-top">
+                    <tr>
+                        <th>Path ID</th>
+                        <th>Index</th>
+                        <th>X</th>
+                        <th>Y</th>
+                        <th>Z</th>
+                        <th>Rx</th>
+                        <th>Ry</th>
+                        <th>Rz</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in _coordinates)
+                    {
+                        <tr>
+                            <td>@c.PathId</td>
+                            <td>@c.Index</td>
+                            <td>@c.X.ToString("F7")</td>
+                            <td>@c.Y.ToString("F7")</td>
+                            <td>@c.Z.ToString("F7")</td>
+                            <td>@c.Rx.ToString("F9")</td>
+                            <td>@c.Ry.ToString("F9")</td>
+                            <td>@c.Rz.ToString("F9")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Coordinate> _coordinates = [];
+
+    protected override void OnInitialized()
+    {
+        Store.OnUpdated += HandleDataUpdated;
+        _coordinates = Store.Coordinates.ToList();
+    }
+
+    private void HandleDataUpdated()
+    {
+        InvokeAsync(() =>
+        {
+            _coordinates = Store.Coordinates.ToList();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        Store.OnUpdated -= HandleDataUpdated;
+    }
+}

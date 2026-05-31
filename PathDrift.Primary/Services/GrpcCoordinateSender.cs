@@ -67,7 +67,10 @@ public sealed class GrpcCoordinateSender : IAsyncDisposable
                 Index = coordinate.Index,
                 X = coordinate.X,
                 Y = coordinate.Y,
-                Z = coordinate.Z
+                Z = coordinate.Z,
+                Rx = coordinate.Rx,
+                Ry = coordinate.Ry,
+                Rz = coordinate.Rz  
             };
 
             await call.RequestStream.WriteAsync(message, cancellationToken).ConfigureAwait(false);

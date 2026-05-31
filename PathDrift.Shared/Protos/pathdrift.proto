@@ -11,13 +11,15 @@ service CoordinateService {
 }
 
 // Represents a single coordinate point from the path drift file.
-//TODO: this needs to work with all the columns - ID	Index	X	Y	Z	Rx	Ry	Rz	Ux	Uy	Uz	UTranslation	URx	URy	URz
 message CoordinateMessage {
   string path_id = 1;
   int32 index = 2;
   double x = 3;
   double y = 4;
   double z = 5;
+  double rx = 6;
+  double ry = 7;
+  double rz = 8;
 }
 
 // Result returned after all coordinates have been received.

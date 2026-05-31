@@ -38,7 +38,11 @@ public sealed class CoordinateReceiverService : CoordinateService.CoordinateServ
                     message.Index,
                     message.X,
                     message.Y,
-                    message.Z);
+                    message.Z,
+                    message.Rx,
+                    message.Ry,
+                    message.Rz
+                    );
 
                 _store.Add(coordinate);
                 count++;

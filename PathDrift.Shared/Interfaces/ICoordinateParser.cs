@@ -8,7 +8,7 @@ namespace PathDrift.Shared.Interfaces;
 public interface ICoordinateParser
 {
     /// <summary>
-    /// Attempts to parse a tab-separated line into a Coordinate.
+    /// Attempts to parse a comma-separated line into a Coordinate.
     /// Returns null if the line is a header or malformed.
     /// </summary>
     Coordinate? Parse(string line);

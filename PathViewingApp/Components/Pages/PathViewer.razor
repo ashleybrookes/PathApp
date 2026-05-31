@@ -5,6 +5,7 @@
 @implements IDisposable
 @inject ICoordinateStore Store
 @rendermode InteractiveServer
+@using PathViewingApp.Components
 
 <PageTitle>Path Drift Viewer</PageTitle>
 
@@ -45,6 +46,8 @@ else
         }
     </svg>
 }
+
+<CoordinateDataTable />
 
 @code {
     private const int SvgWidth = 800;
