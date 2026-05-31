@@ -11,19 +11,12 @@ namespace PathViewingApp.Services;
 public sealed class CoordinateStore(ILogger<CoordinateStore> logger) : ICoordinateStore
 {
     private readonly Lock _lock = new();
-    private readonly List<Coordinate> _coordinates = [];
+    private readonly Queue<Coordinate> _coordinates = new();
+    private const int MaxCapacity = 10_000;
+    private IReadOnlyList<Coordinate> _snapshot = Array.Empty<Coordinate>();
 
     /// <inheritdoc />
-    public IReadOnlyList<Coordinate> Coordinates
-    {
-        get
-        {
-            lock (_lock)
-            {
-                return _coordinates.ToList().AsReadOnly();
-            }
-        }
-    }
+    public IReadOnlyList<Coordinate> Coordinates => _snapshot;
 
     /// <inheritdoc />
     public event Action? OnUpdated;
@@ -33,7 +26,11 @@ public sealed class CoordinateStore(ILogger<CoordinateStore> logger) : ICoordina
     {
         lock (_lock)
         {
-            _coordinates.Add(coordinate);
+            if (_coordinates.Count >= MaxCapacity)
+                _coordinates.Dequeue();
+
+            _coordinates.Enqueue(coordinate);
+            _snapshot = _coordinates.ToArray();
         }
 
         if (OnUpdated is null) return;
