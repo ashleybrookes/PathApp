@@ -17,11 +17,12 @@ public sealed class FileReaderService : IFileReader
 
         using var reader = new StreamReader(filePath);
 
-        while (!reader.EndOfStream && !cancellationToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
-            if (line is not null)
-                yield return line;
+            if (line is null)
+                break;
+            yield return line;
         }
     }
 }
