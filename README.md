@@ -2,6 +2,8 @@
 
 A real-time 3D path drift visualisation tool built with .NET 10, Blazor Server, and gRPC.
 
+<img width="1041" height="961" alt="image" src="https://github.com/user-attachments/assets/3df5b9da-d8c1-4ad7-ad76-01f0de1ffa67" />
+
 ## Architecture
 
 The solution consists of three projects:
