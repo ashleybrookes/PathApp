@@ -40,12 +40,17 @@ CSV File → PathDrift.Primary → (gRPC stream) → PathViewingApp → Browser 
 
 3. Open your browser to `https://localhost:7255` to see the path visualisation.
 
+   The page shows:
+   - An **SVG chart** of the path, switchable between X-Y, X-Z, and Y-Z planes
+   - A **coordinate data table** below the chart listing every received point with all columns in real-time
+
 ## Features
 
 - Real-time coordinate streaming via gRPC (client-streaming)
 - Interactive SVG visualisation with plane selection (X-Y, X-Z, Y-Z)
 - Thread-safe in-memory data store with event-driven UI updates
 - Start/end point markers on the rendered path
+- Coordinate data table displaying all streamed points (Path ID, Index, X, Y, Z, Rx, Ry, Rz) in real-time below the visualisation
 
 ## Third-Party Libraries
 
