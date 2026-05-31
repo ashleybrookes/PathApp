@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PathViewingApp.Tests", "Pat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PathDrift.Primary.Tests", "PathDrift.Primary.Tests\PathDrift.Primary.Tests.csproj", "{AC043808-8085-4ED7-8B61-CC23721A6F3B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PathDrift.Shared.Tests", "PathDrift.Shared.Tests\PathDrift.Shared.Tests.csproj", "{E157C84F-1D7C-4614-B23E-C47B36241B1A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -80,6 +82,18 @@ Global
 		{AC043808-8085-4ED7-8B61-CC23721A6F3B}.Release|x64.Build.0 = Release|Any CPU
 		{AC043808-8085-4ED7-8B61-CC23721A6F3B}.Release|x86.ActiveCfg = Release|Any CPU
 		{AC043808-8085-4ED7-8B61-CC23721A6F3B}.Release|x86.Build.0 = Release|Any CPU
+		{E157C84F-1D7C-4614-B23E-C47B36241B1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E157C84F-1D7C-4614-B23E-C47B36241B1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E157C84F-1D7C-4614-B23E-C47B36241B1A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E157C84F-1D7C-4614-B23E-C47B36241B1A}.Debug|x64.Build.0 = Debug|Any CPU
+		{E157C84F-1D7C-4614-B23E-C47B36241B1A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E157C84F-1D7C-4614-B23E-C47B36241B1A}.Debug|x86.Build.0 = Debug|Any CPU
+		{E157C84F-1D7C-4614-B23E-C47B36241B1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E157C84F-1D7C-4614-B23E-C47B36241B1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E157C84F-1D7C-4614-B23E-C47B36241B1A}.Release|x64.ActiveCfg = Release|Any CPU
+		{E157C84F-1D7C-4614-B23E-C47B36241B1A}.Release|x64.Build.0 = Release|Any CPU
+		{E157C84F-1D7C-4614-B23E-C47B36241B1A}.Release|x86.ActiveCfg = Release|Any CPU
+		{E157C84F-1D7C-4614-B23E-C47B36241B1A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
