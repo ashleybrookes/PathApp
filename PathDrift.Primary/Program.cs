@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PathDrift.Primary.Services;
@@ -12,16 +13,11 @@ builder.Services.AddSingleton<ICoordinateParser, CoordinateParserService>();
 
 using var host = builder.Build();
 
-// Determine file path from command-line arguments
-// TODO : redo the following path combine. thats not cool.
-var filePath = args.Length > 0
-    ? args[0]
-    : Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "data", "run1.csv");
-
-// Server address — the Blazor app's HTTPS endpoint
-var serverAddress = args.Length > 1
-    ? args[1]
-    : "https://localhost:7255";
+var config = host.Services.GetRequiredService<IConfiguration>();
+var filePath = config["PathDrift:FilePath"]
+    ?? throw new InvalidOperationException("PathDrift:FilePath is not configured.");
+var serverAddress = config["PathDrift:ServerAddress"]
+    ?? throw new InvalidOperationException("PathDrift:ServerAddress is not configured.");
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 var fileReader = host.Services.GetRequiredService<IFileReader>();
