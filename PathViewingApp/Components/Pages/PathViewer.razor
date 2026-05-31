@@ -2,8 +2,10 @@
 @page "/path-viewer"
 @using PathDrift.Shared.Interfaces
 @using PathDrift.Shared.Models
+@using PathViewingApp.Services
 @implements IDisposable
 @inject ICoordinateStore Store
+@inject PathViewerLogic Logic
 @rendermode InteractiveServer
 @using PathViewingApp.Components
 
@@ -12,9 +14,9 @@
 <h1>Path Drift Visualisation</h1>
 
 <div class="controls">
-    <button class="btn @(ActivePlane == Plane.XY ? "btn-primary" : "btn-outline-primary")" @onclick="() => SetPlane(Plane.XY)">X-Y</button>
-    <button class="btn @(ActivePlane == Plane.XZ ? "btn-primary" : "btn-outline-primary")" @onclick="() => SetPlane(Plane.XZ)">X-Z</button>
-    <button class="btn @(ActivePlane == Plane.YZ ? "btn-primary" : "btn-outline-primary")" @onclick="() => SetPlane(Plane.YZ)">Y-Z</button>
+    <button class="btn @(ActivePlane == PathViewerLogic.Plane.XY ? "btn-primary" : "btn-outline-primary")" @onclick="() => SetPlane(PathViewerLogic.Plane.XY)">X-Y</button>
+    <button class="btn @(ActivePlane == PathViewerLogic.Plane.XZ ? "btn-primary" : "btn-outline-primary")" @onclick="() => SetPlane(PathViewerLogic.Plane.XZ)">X-Z</button>
+    <button class="btn @(ActivePlane == PathViewerLogic.Plane.YZ ? "btn-primary" : "btn-outline-primary")" @onclick="() => SetPlane(PathViewerLogic.Plane.YZ)">Y-Z</button>
     <span class="ms-3 text-muted">Points: @_coordinates.Count</span>
 </div>
 
@@ -33,19 +35,19 @@ else
 {
     <ErrorBoundary>
         <ChildContent>
-            <svg width="@SvgWidth" height="@SvgHeight" class="mt-3 border rounded" style="background: #1a1a2e;">
+            <svg width="@PathViewerLogic.SvgWidth" height="@PathViewerLogic.SvgHeight" class="mt-3 border rounded" style="background: #1a1a2e;">
                 @* Axis labels *@
-                @((MarkupString)$"<text x=\"{SvgWidth / 2}\" y=\"{SvgHeight - 5}\" fill=\"#aaa\" text-anchor=\"middle\" font-size=\"12\">{HAxisLabel}</text>")
-                @((MarkupString)$"<text x=\"12\" y=\"{SvgHeight / 2}\" fill=\"#aaa\" text-anchor=\"middle\" font-size=\"12\" transform=\"rotate(-90, 12, {SvgHeight / 2})\">{VAxisLabel}</text>")
+                @((MarkupString)$"<text x=\"{PathViewerLogic.SvgWidth / 2}\" y=\"{PathViewerLogic.SvgHeight - 5}\" fill=\"#aaa\" text-anchor=\"middle\" font-size=\"12\">{Logic.GetHAxisLabel(ActivePlane)}</text>")
+                @((MarkupString)$"<text x=\"12\" y=\"{PathViewerLogic.SvgHeight / 2}\" fill=\"#aaa\" text-anchor=\"middle\" font-size=\"12\" transform=\"rotate(-90, 12, {PathViewerLogic.SvgHeight / 2})\">{Logic.GetVAxisLabel(ActivePlane)}</text>")
 
                 @* Path polyline *@
-                <polyline points="@GetPolylinePoints()" fill="none" stroke="#00d4ff" stroke-width="1.5" stroke-linejoin="round" />
+                <polyline points="@Logic.GetPolylinePoints(_coordinates, ActivePlane, _minH, _maxH, _minV, _maxV)" fill="none" stroke="#00d4ff" stroke-width="1.5" stroke-linejoin="round" />
 
                 @* Start and end markers *@
                 @if (_coordinates.Count > 0)
                 {
-                    var (sx, sy) = ScalePoint(_coordinates[0]);
-                    var (ex, ey) = ScalePoint(_coordinates[^1]);
+                    var (sx, sy) = Logic.ScalePoint(_coordinates[0], ActivePlane, _minH, _maxH, _minV, _maxV);
+                    var (ex, ey) = Logic.ScalePoint(_coordinates[^1], ActivePlane, _minH, _maxH, _minV, _maxV);
                     <circle cx="@sx" cy="@sy" r="5" fill="#00ff88" />
                     <circle cx="@ex" cy="@ey" r="5" fill="#ff4444" />
                     @((MarkupString)$"<text x=\"{sx + 8}\" y=\"{sy - 5}\" fill=\"#00ff88\" font-size=\"10\">Start</text>")
@@ -64,32 +66,11 @@ else
 <CoordinateDataTable />
 
 @code {
-    private const int SvgWidth = 800;
-    private const int SvgHeight = 600;
-    private const int Padding = 40;
-
     private List<Coordinate> _coordinates = [];
     private double _minH, _maxH, _minV, _maxV;
     private string? _errorMessage;
 
-    private enum Plane { XY, XZ, YZ }
-    private Plane ActivePlane { get; set; } = Plane.XY;
-
-    private string HAxisLabel => ActivePlane switch
-    {
-        Plane.XY => "X",
-        Plane.XZ => "X",
-        Plane.YZ => "Y",
-        _ => "X"
-    };
-
-    private string VAxisLabel => ActivePlane switch
-    {
-        Plane.XY => "Y",
-        Plane.XZ => "Z",
-        Plane.YZ => "Z",
-        _ => "Y"
-    };
+    private PathViewerLogic.Plane ActivePlane { get; set; } = PathViewerLogic.Plane.XY;
 
     protected override void OnInitialized()
     {
@@ -97,7 +78,7 @@ else
         RefreshData();
     }
 
-    private void SetPlane(Plane plane)
+    private void SetPlane(PathViewerLogic.Plane plane)
     {
         ActivePlane = plane;
         RefreshData();
@@ -125,54 +106,7 @@ else
         _coordinates = Store.Coordinates.ToList();
         if (_coordinates.Count == 0) return;
 
-        var hValues = _coordinates.Select(GetH).ToList();
-        var vValues = _coordinates.Select(GetV).ToList();
-
-        _minH = hValues.Min();
-        _maxH = hValues.Max();
-        _minV = vValues.Min();
-        _maxV = vValues.Max();
-
-        // Prevent division by zero if all points are identical
-        if (Math.Abs(_maxH - _minH) < 0.0001) { _minH -= 1; _maxH += 1; }
-        if (Math.Abs(_maxV - _minV) < 0.0001) { _minV -= 1; _maxV += 1; }
-    }
-
-    private double GetH(Coordinate c) => ActivePlane switch
-    {
-        Plane.XY => c.X,
-        Plane.XZ => c.X,
-        Plane.YZ => c.Y,
-        _ => c.X
-    };
-
-    private double GetV(Coordinate c) => ActivePlane switch
-    {
-        Plane.XY => c.Y,
-        Plane.XZ => c.Z,
-        Plane.YZ => c.Z,
-        _ => c.Y
-    };
-
-    private (double x, double y) ScalePoint(Coordinate c)
-    {
-        var h = GetH(c);
-        var v = GetV(c);
-
-        var x = Padding + (h - _minH) / (_maxH - _minH) * (SvgWidth - 2 * Padding);
-        // Invert Y axis for SVG (top is 0)
-        var y = SvgHeight - Padding - (v - _minV) / (_maxV - _minV) * (SvgHeight - 2 * Padding);
-
-        return (Math.Round(x, 2), Math.Round(y, 2));
-    }
-
-    private string GetPolylinePoints()
-    {
-        return string.Join(" ", _coordinates.Select(c =>
-        {
-            var (x, y) = ScalePoint(c);
-            return $"{x},{y}";
-        }));
+        (_minH, _maxH, _minV, _maxV) = Logic.ComputeBounds(_coordinates, ActivePlane);
     }
 
     public void Dispose()

@@ -24,6 +24,7 @@ builder.Services.AddGrpc();
 builder.Services.AddServerSideBlazor().AddCircuitOptions(o => o.DetailedErrors = builder.Environment.IsDevelopment());
 //registering the in memory data store
 builder.Services.AddSingleton<ICoordinateStore, CoordinateStore>();
+builder.Services.AddSingleton<PathViewerLogic>();
 
 var app = builder.Build();
 
