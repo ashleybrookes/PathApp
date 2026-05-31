@@ -44,6 +44,17 @@ public sealed class CoordinateReceiverService(ICoordinateStore store, ILogger<Co
         catch (OperationCanceledException)
         {
             logger.LogWarning("Client stream was cancelled after {Count} points", count);
+            return new StreamResult { Success = false, PointsReceived = count, Message = "Stream cancelled" };
+        }
+        catch (RpcException ex)
+        {
+            logger.LogError(ex, "gRPC error after {Count} points: {Status}", count, ex.StatusCode);
+            return new StreamResult { Success = false, PointsReceived = count, Message = $"gRPC error: {ex.StatusCode}" };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error processing stream after {Count} points", count);
+            return new StreamResult { Success = false, PointsReceived = count, Message = "Internal server error" };
         }
 
         logger.LogInformation("Received {Count} coordinate points", count);

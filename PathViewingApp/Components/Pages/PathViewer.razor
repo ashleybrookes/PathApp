@@ -18,6 +18,11 @@
     <span class="ms-3 text-muted">Points: @_coordinates.Count</span>
 </div>
 
+@if (_errorMessage is not null)
+{
+    <div class="alert alert-danger mt-3">@_errorMessage</div>
+}
+
 @if (_coordinates.Count == 0)
 {
     <div class="alert alert-info mt-3">
@@ -26,25 +31,34 @@
 }
 else
 {
-    <svg width="@SvgWidth" height="@SvgHeight" class="mt-3 border rounded" style="background: #1a1a2e;">
-        @* Axis labels *@
-        @((MarkupString)$"<text x=\"{SvgWidth / 2}\" y=\"{SvgHeight - 5}\" fill=\"#aaa\" text-anchor=\"middle\" font-size=\"12\">{HAxisLabel}</text>")
-        @((MarkupString)$"<text x=\"12\" y=\"{SvgHeight / 2}\" fill=\"#aaa\" text-anchor=\"middle\" font-size=\"12\" transform=\"rotate(-90, 12, {SvgHeight / 2})\">{VAxisLabel}</text>")
+    <ErrorBoundary>
+        <ChildContent>
+            <svg width="@SvgWidth" height="@SvgHeight" class="mt-3 border rounded" style="background: #1a1a2e;">
+                @* Axis labels *@
+                @((MarkupString)$"<text x=\"{SvgWidth / 2}\" y=\"{SvgHeight - 5}\" fill=\"#aaa\" text-anchor=\"middle\" font-size=\"12\">{HAxisLabel}</text>")
+                @((MarkupString)$"<text x=\"12\" y=\"{SvgHeight / 2}\" fill=\"#aaa\" text-anchor=\"middle\" font-size=\"12\" transform=\"rotate(-90, 12, {SvgHeight / 2})\">{VAxisLabel}</text>")
 
-        @* Path polyline *@
-        <polyline points="@GetPolylinePoints()" fill="none" stroke="#00d4ff" stroke-width="1.5" stroke-linejoin="round" />
+                @* Path polyline *@
+                <polyline points="@GetPolylinePoints()" fill="none" stroke="#00d4ff" stroke-width="1.5" stroke-linejoin="round" />
 
-        @* Start and end markers *@
-        @if (_coordinates.Count > 0)
-        {
-            var (sx, sy) = ScalePoint(_coordinates[0]);
-            var (ex, ey) = ScalePoint(_coordinates[^1]);
-            <circle cx="@sx" cy="@sy" r="5" fill="#00ff88" />
-            <circle cx="@ex" cy="@ey" r="5" fill="#ff4444" />
-            @((MarkupString)$"<text x=\"{sx + 8}\" y=\"{sy - 5}\" fill=\"#00ff88\" font-size=\"10\">Start</text>")
-            @((MarkupString)$"<text x=\"{ex + 8}\" y=\"{ey - 5}\" fill=\"#ff4444\" font-size=\"10\">End</text>")
-        }
-    </svg>
+                @* Start and end markers *@
+                @if (_coordinates.Count > 0)
+                {
+                    var (sx, sy) = ScalePoint(_coordinates[0]);
+                    var (ex, ey) = ScalePoint(_coordinates[^1]);
+                    <circle cx="@sx" cy="@sy" r="5" fill="#00ff88" />
+                    <circle cx="@ex" cy="@ey" r="5" fill="#ff4444" />
+                    @((MarkupString)$"<text x=\"{sx + 8}\" y=\"{sy - 5}\" fill=\"#00ff88\" font-size=\"10\">Start</text>")
+                    @((MarkupString)$"<text x=\"{ex + 8}\" y=\"{ey - 5}\" fill=\"#ff4444\" font-size=\"10\">End</text>")
+                }
+            </svg>
+        </ChildContent>
+        <ErrorContent Context="renderEx">
+            <div class="alert alert-danger mt-3">
+                Visualisation error: @renderEx.Message
+            </div>
+        </ErrorContent>
+    </ErrorBoundary>
 }
 
 <CoordinateDataTable />
@@ -56,6 +70,7 @@ else
 
     private List<Coordinate> _coordinates = [];
     private double _minH, _maxH, _minV, _maxV;
+    private string? _errorMessage;
 
     private enum Plane { XY, XZ, YZ }
     private Plane ActivePlane { get; set; } = Plane.XY;
@@ -92,8 +107,16 @@ else
     {
         InvokeAsync(() =>
         {
-            RefreshData();
-            StateHasChanged();
+            try
+            {
+                RefreshData();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                _errorMessage = $"Failed to update display: {ex.Message}";
+                StateHasChanged();
+            }
         });
     }
 
