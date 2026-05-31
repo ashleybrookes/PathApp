@@ -24,7 +24,15 @@ CSV File → PathDrift.Primary → (gRPC stream) → PathViewingApp → Browser 
 
 - .NET 10 SDK
 
-### Running
+### Running from Visual Studio
+
+1. Right-click the solution in Solution Explorer → **Configure Startup Projects**
+2. Select **Multiple startup projects**
+3. Set both **PathViewingApp** and **PathDrift.Primary** to **Start**
+4. Ensure **PathViewingApp** is listed **above** PathDrift.Primary (it must start first as it hosts the gRPC server)
+5. Press **F5** or click **Start**
+
+### Running from the command line
 
 1. **Start the Blazor app** (hosts the gRPC server):
    ```bash
@@ -70,4 +78,66 @@ The input CSV file uses the following format:
 ID,Index,X,Y,Z,Rx,Ry,Rz
 Path_2,0,-308.3428217,-104.3258526,614.7202431,1.470218752,2.290488904,-91.87757768
 ```
+
+### Changing the Data File
+
+To use your own coordinate data, replace the contents of `PathDrift.Primary/data/run1.csv` with your data. The file must:
+
+1. Have a header row as the first line (it will be skipped automatically)
+2. Use comma-separated values with 8 columns: `ID,Index,X,Y,Z,Rx,Ry,Rz`
+3. Keep the filename as `run1.csv`
+
+Example:
+
+```csv
+ID,Index,X,Y,Z,Rx,Ry,Rz
+MyPath,0,100.0,200.0,300.0,0.5,0.6,0.7
+MyPath,1,101.0,201.5,300.2,0.5,0.6,0.7
+MyPath,2,102.3,203.0,300.5,0.5,0.6,0.7
+```
+
+| Column | Type | Description |
+|--------|------|-------------|
+| ID | string | Path identifier (groups points into a single path) |
+| Index | int | Sequential point index |
+| X, Y, Z | double | 3D position coordinates |
+| Rx, Ry, Rz | double | Rotation values |
+
+No restart of PathViewingApp is needed — just re-run PathDrift.Primary after updating the file.
+
+## Testing
+
+All tests use **xUnit** with **NSubstitute** for mocking. The PathViewingApp tests also use **bUnit** for Blazor component testing.
+
+### Test Projects
+
+| Test Project | Covers |
+|-------------|--------|
+| **PathDrift.Primary.Tests** | Services in the PathDrift.Primary console app |
+| **PathViewingApp.Tests** | Services and components in the PathViewingApp Blazor app |
+
+### PathDrift.Primary.Tests
+
+| Test File | Service Under Test | What's Tested |
+|-----------|--------------------|---------------|
+| `CoordinateParserServiceTests.cs` | `CoordinateParserService` | CSV line parsing, header skipping, malformed line handling, null/empty input |
+| `FileReaderServiceTests.cs` | `FileReaderService` | Async line-by-line reading, file not found exception, cancellation behaviour |
+| `GrpcCoordinateSenderTests.cs` | `GrpcCoordinateSender` | File streaming and gRPC send orchestration |
+
+### PathViewingApp.Tests
+
+| Test File | Service/Component Under Test | What's Tested |
+|-----------|------------------------------|---------------|
+| `CoordinateStoreTests.cs` | `CoordinateStore` | Adding coordinates, event notification, subscriber error handling, snapshot isolation |
+| `CoordinateReceiverServiceTests.cs` | `CoordinateReceiverService` | gRPC stream receiving, empty streams, cancellation handling |
+| `PathViewerLogicTests.cs` | `PathViewerLogic` | Axis selection per plane, bounds computation, SVG scaling, polyline generation, axis labels |
+| `CoordinateDataTableTests.cs` | `CoordinateDataTable` (Blazor component) | Empty state rendering, table rows, point count badge, number formatting, live updates, column headers |
+
+### Running Tests
+
+```bash
+dotnet test
+```
+
+Or in Visual Studio: **Test > Run All Tests** (Ctrl+R, A)
 
