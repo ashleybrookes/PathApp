@@ -8,52 +8,40 @@ namespace PathDrift.Primary.Services;
 /// <summary>
 /// Reads coordinates from a file and streams them to the secondary service via gRPC.
 /// </summary>
-public sealed class GrpcCoordinateSender : IAsyncDisposable
+public sealed class GrpcCoordinateSender(
+    IFileReader fileReader,
+    ICoordinateParser parser,
+    ILogger<GrpcCoordinateSender> logger,
+    string serverAddress) : IAsyncDisposable
 {
-    private readonly IFileReader _fileReader;
-    private readonly ICoordinateParser _parser;
-    private readonly ILogger<GrpcCoordinateSender> _logger;
-    private readonly GrpcChannel _channel;
-    private readonly CoordinateService.CoordinateServiceClient _client;
-
-    public GrpcCoordinateSender(
-        IFileReader fileReader,
-        ICoordinateParser parser,
-        ILogger<GrpcCoordinateSender> logger,
-        string serverAddress)
+    private readonly GrpcChannel _channel = GrpcChannel.ForAddress(serverAddress, new GrpcChannelOptions
     {
-        _fileReader = fileReader;
-        _parser = parser;
-        _logger = logger;
-        _channel = GrpcChannel.ForAddress(serverAddress, new GrpcChannelOptions
+        HttpHandler = new SocketsHttpHandler
         {
-            HttpHandler = new SocketsHttpHandler
+            EnableMultipleHttp2Connections = true,
+            SslOptions = new System.Net.Security.SslClientAuthenticationOptions
             {
-                EnableMultipleHttp2Connections = true,
-                SslOptions = new System.Net.Security.SslClientAuthenticationOptions
-                {
-                    // Accept the .NET dev certificate (development only)
-                    RemoteCertificateValidationCallback = (_, _, _, _) => true
-                }
+                // Accept the .NET dev certificate (development only)
+                RemoteCertificateValidationCallback = (_, _, _, _) => true
             }
-        });
-        _client = new CoordinateService.CoordinateServiceClient(_channel);
-    }
+        }
+    });
 
     /// <summary>
     /// Reads the specified file and streams all parsed coordinates to the gRPC server.
     /// </summary>
     public async Task<StreamResult> SendFileAsync(string filePath, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Starting to stream coordinates from {FilePath}", filePath);
+        logger.LogInformation("Starting to stream coordinates from {FilePath}", filePath);
 
-        using var call = _client.StreamCoordinates(cancellationToken: cancellationToken);
+        var client = new CoordinateService.CoordinateServiceClient(_channel);
+        using var call = client.StreamCoordinates(cancellationToken: cancellationToken);
         var sentCount = 0;
         var skippedCount = 0;
 
-        await foreach (var line in _fileReader.ReadLinesAsync(filePath, cancellationToken).ConfigureAwait(false))
+        await foreach (var line in fileReader.ReadLinesAsync(filePath, cancellationToken).ConfigureAwait(false))
         {
-            var coordinate = _parser.Parse(line);
+            var coordinate = parser.Parse(line);
 
             if (coordinate is null)
             {
@@ -82,7 +70,7 @@ public sealed class GrpcCoordinateSender : IAsyncDisposable
 
         var result = await call.ResponseAsync.ConfigureAwait(false);
 
-        _logger.LogInformation(
+        logger.LogInformation(
             "Streaming complete. Sent: {Sent}, Skipped: {Skipped}. Server response: {Message}",
             sentCount, skippedCount, result.Message);
 

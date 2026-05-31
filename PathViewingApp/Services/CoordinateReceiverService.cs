@@ -9,16 +9,9 @@ namespace PathViewingApp.Services;
 /// <summary>
 /// gRPC server implementation that receives streamed coordinates from the primary service.
 /// </summary>
-public sealed class CoordinateReceiverService : CoordinateService.CoordinateServiceBase
+public sealed class CoordinateReceiverService(ICoordinateStore store, ILogger<CoordinateReceiverService> logger)
+    : CoordinateService.CoordinateServiceBase
 {
-    private readonly ICoordinateStore _store;
-    private readonly ILogger<CoordinateReceiverService> _logger;
-
-    public CoordinateReceiverService(ICoordinateStore store, ILogger<CoordinateReceiverService> logger)
-    {
-        _store = store;
-        _logger = logger;
-    }
 
     /// <summary>
     /// Receives a stream of coordinates from the client and stores them.
@@ -44,16 +37,16 @@ public sealed class CoordinateReceiverService : CoordinateService.CoordinateServ
                     message.Rz
                     );
 
-                _store.Add(coordinate);
+                store.Add(coordinate);
                 count++;
             }
         }
         catch (OperationCanceledException)
         {
-            _logger.LogWarning("Client stream was cancelled after {Count} points", count);
+            logger.LogWarning("Client stream was cancelled after {Count} points", count);
         }
 
-        _logger.LogInformation("Received {Count} coordinate points", count);
+        logger.LogInformation("Received {Count} coordinate points", count);
 
         return new StreamResult
         {
