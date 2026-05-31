@@ -14,8 +14,11 @@ builder.Services.AddSingleton<ICoordinateParser, CoordinateParserService>();
 using var host = builder.Build();
 
 var config = host.Services.GetRequiredService<IConfiguration>();
-var filePath = config["PathDrift:FilePath"]
+var filePathConfig = config["PathDrift:FilePath"]
     ?? throw new InvalidOperationException("PathDrift:FilePath is not configured.");
+var filePath = Path.IsPathRooted(filePathConfig)
+    ? filePathConfig
+    : Path.Join(AppContext.BaseDirectory, filePathConfig);
 var serverAddress = config["PathDrift:ServerAddress"]
     ?? throw new InvalidOperationException("PathDrift:ServerAddress is not configured.");
 
