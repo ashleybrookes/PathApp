@@ -93,10 +93,6 @@ Controls server endpoints, protocols, and logging:
 {
   "Kestrel": {
 	"Endpoints": {
-	  "Http": {
-		"Url": "http://localhost:5036",
-		"Protocols": "Http1"
-	  },
 	  "Https": {
 		"Url": "https://localhost:7255",
 		"Protocols": "Http1AndHttp2"
@@ -108,7 +104,6 @@ Controls server endpoints, protocols, and logging:
 
 | Setting | Description |
 |---------|-------------|
-| `Endpoints:Http` | HTTP-only endpoint for the Blazor UI (HTTP/1.1) |
 | `Endpoints:Https` | HTTPS endpoint serving both the Blazor UI and gRPC server (HTTP/1.1 + HTTP/2) |
 
 > **Note:** gRPC requires HTTP/2 over TLS, which is why the HTTPS endpoint uses `Http1AndHttp2`.
@@ -117,7 +112,6 @@ Controls server endpoints, protocols, and logging:
 
 | Port | Protocol | Purpose |
 |------|----------|---------|
-| 5036 | HTTP | Blazor app (HTTP/1.1 only) |
 | 7255 | HTTPS | Blazor app + gRPC server (HTTP/1.1 and HTTP/2) |
 
 ## Features
