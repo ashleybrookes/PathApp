@@ -212,7 +212,6 @@ Future improvements that would enhance the application:
 - **3D path visualisation page** — add a dedicated page rendering the path in 3D, allowing rotation and zoom for a more complete spatial view of the drift data
 - **Flexible CSV column ordering** — support CSV files where columns appear in a different order by reading the header row and mapping columns by name rather than position
 - **Increase unit test coverage** — add more unit tests to bring coverage from 66% up to 100%
-- **Use .NET TPL for parallel processing** — leverage the Task Parallel Library to utilise more available CPU when handling large datasets and supporting real-time 2D/3D drawing
 - **Extend PathDrift.Primary into an ASP.NET Core app** — replace the console app with a web application that allows users to upload CSV files via a browser, rather than reading from a pre-configured file path
 - **Configurable SVG dimensions** — allow users to adjust chart size and padding from the UI
 
